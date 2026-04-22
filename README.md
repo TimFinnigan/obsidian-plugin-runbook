@@ -78,7 +78,59 @@ Enable the plugin in **Obsidian → Settings → Community plugins**.
 
 ---
 
-## 4. Create a GitHub release
+## 4. Set up and run the Obsidian ESLint plugin
+
+The Obsidian team runs [`eslint-plugin-obsidianmd`](https://github.com/obsidianmd/eslint-plugin) on every submission. Run it locally before submitting to catch issues early.
+
+### Install
+
+```bash
+npm install --save-dev eslint @typescript-eslint/parser eslint-plugin-obsidianmd
+```
+
+Add a `"lint"` script to `package.json`:
+```json
+"scripts": {
+  "lint": "eslint main.ts"
+}
+```
+
+Create `eslint.config.mjs`:
+```javascript
+import tsparser from '@typescript-eslint/parser';
+import obsidianmd from 'eslint-plugin-obsidianmd';
+
+export default [
+    ...obsidianmd.configs.recommended,
+    {
+        files: ['**/*.ts'],
+        languageOptions: {
+            parser: tsparser,
+            parserOptions: { project: './tsconfig.json' },
+        },
+    },
+];
+```
+
+### Run
+
+```bash
+npm run lint
+```
+
+### Common lint errors
+
+| Error | Fix |
+|---|---|
+| `Async method 'onload' has no 'await' expression` | Remove `async` from `onload()` — `onLayoutReady` takes a plain callback |
+| `Unexpected aliasing of 'this' to local variable` | Replace `const plugin = this` with `.bind(this)` on the methods you need |
+| `activeLeaf is deprecated` | Replace `workspace.activeLeaf` with `workspace.getMostRecentLeaf()` |
+| `'SomeMethod' requires Obsidian vX.Y.Z, but minAppVersion is ...` | Bump `minAppVersion` in `manifest.json` and `versions.json` to match the highest version required by any API you use |
+| `Unsafe assignment of an 'any' value` on prototype access | If you're patching a private prototype (unavoidable for some patterns), wrap the block with `/* eslint-disable @typescript-eslint/no-unsafe-assignment, ... */` and re-enable after |
+
+---
+
+## 5. Create a GitHub release
 
 The bot pulls `main.js` and `manifest.json` directly from the release — they must be attached as individual files.
 
@@ -196,11 +248,12 @@ git push
 
 ## Checklist summary
 
-- [ ] `manifest.json` with all required fields
+- [ ] `manifest.json` with all required fields (`minAppVersion` matches highest API used)
 - [ ] `main.js` (compiled)
 - [ ] `versions.json`
 - [ ] `LICENSE`
 - [ ] `README.md`
+- [ ] `eslint.config.mjs` set up and `npm run lint` passes clean
 - [ ] GitHub repo created and pushed
 - [ ] GitHub release `1.0.0` with `main.js` and `manifest.json` attached
 - [ ] `obsidian-releases` forked and entry added to `community-plugins.json`
