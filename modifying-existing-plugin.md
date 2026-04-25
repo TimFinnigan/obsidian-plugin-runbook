@@ -50,6 +50,8 @@ npm run build
 
 Reload the plugin in Obsidian after each build to pick up changes.
 
+> **Quick reload:** `Cmd+P` → "Reload app" is faster than toggling via Settings and picks up all plugin changes.
+
 ### For live rebuilds while editing
 
 ```bash
